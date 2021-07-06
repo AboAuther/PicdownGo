@@ -10,7 +10,8 @@ type Website struct {
 	ImgAddrPattern string `json:"img_addr_pattern"`
 }
 
-var DefaultJson = []byte(`{
+var DefaultJson = []byte(`
+{
 	"support_websites":[
 		{
 			"website": "cnblogs.com",

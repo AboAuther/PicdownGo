@@ -21,7 +21,8 @@ var (
 )
 var configuration Parser
 
-func worker(destDir, website string, linkChan chan string) (err error) {
+func worker(destDir, website string, g *errgroup.Group, linkChan chan string) (err error) {
+
 	for picUrl := range linkChan {
 		if strings.HasPrefix(picUrl, "//") {
 			picUrl = "https:" + picUrl
@@ -30,7 +31,7 @@ func worker(destDir, website string, linkChan chan string) (err error) {
 		}
 		resp, err := http.Get(picUrl)
 		if err != nil {
-			return fmt.Errorf("Get picture URL failed,%w,picUrl:%s", err, picUrl)
+			return fmt.Errorf("picUrl:%sGet picture URL failed,%w", picUrl, err)
 		}
 		defer resp.Body.Close()
 		out, err := os.Create(destDir + "/" + fmt.Sprint(rand.Int()) + ".jpg")
@@ -70,7 +71,8 @@ func crawler(postUrl string, workNum int) (err error) {
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		return fmt.Errorf("Status code error:%d %s", res.StatusCode, res.Status)
+		fmt.Printf("Status code error:%d %s \n", res.StatusCode, res.Status)
+		return nil
 	}
 
 	doc, err := goquery.NewDocumentFromReader(res.Body)
@@ -92,11 +94,18 @@ func crawler(postUrl string, workNum int) (err error) {
 	var g errgroup.Group
 	for i := 0; i < workNum; i++ {
 		g.Go(func() error {
-			err := worker(dir, targetSiteConf.Website, linkChan)
+			err := worker(dir, targetSiteConf.Website, &g, linkChan)
 			return err
 		})
 	}
-	if err := g.Wait(); err != nil {
+	doc.Find(targetSiteConf.ImgPattern).Each(func(i int, img *goquery.Selection) {
+		imgUrl, _ := img.Attr(targetSiteConf.ImgAddrPattern)
+		linkChan <- imgUrl
+	})
+	close(linkChan)
+
+	err = g.Wait()
+	if err != nil {
 		return fmt.Errorf(" fetch URLs failed.%w", err)
 	}
 	return nil
@@ -114,7 +123,7 @@ func reloadParser(jsonFileAddr string) (err error) {
 		file, _ = os.ReadFile(jsonFileAddr)
 		fmt.Println("Loading local json file...")
 	} else {
-		err := errors.New("Json file is not Existed.")
+		err := errors.New("Json file is not Existed")
 		return err
 	}
 	if len(file) == 0 {
@@ -153,6 +162,7 @@ func main() {
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}
+			fmt.Println("pictures have downloaded")
 			return nil
 		}}
 	command.Flags().StringVarP(&postUrl, "URL", "u", "", "URL of post")
