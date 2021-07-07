@@ -21,20 +21,19 @@ var (
 )
 var configuration Parser
 
-func worker(destDir, website string, g *errgroup.Group, linkChan chan string) (err error) {
-
+func worker(destDir, website string, linkChan chan string) (err error) {
 	for picUrl := range linkChan {
 		if strings.HasPrefix(picUrl, "//") {
 			picUrl = "https:" + picUrl
 		} else {
-			picUrl = "https://" + website + picUrl
+			//picUrl = "https://" + website + picUrl
 		}
 		resp, err := http.Get(picUrl)
 		if err != nil {
 			return fmt.Errorf("picUrl:%sGet picture URL failed,%w", picUrl, err)
 		}
 		defer resp.Body.Close()
-		out, err := os.Create(destDir + "/" + fmt.Sprint(rand.Int()) + ".jpg")
+		out, err := os.Create(destDir + "/" + fmt.Sprint(rand.Int()) + ".png")
 		if err != nil {
 			return fmt.Errorf("create file failed,%w", err)
 		}
@@ -60,8 +59,8 @@ func findDomainByUrl(postUrl string) (*Website, error) {
 			return &configuration.SupportWebsites[index], nil
 		}
 	}
-	fmt.Println("Url input is not in support list")
-	return nil, nil
+	err = errors.New("Url input is not in support list")
+	return nil, err
 }
 
 func crawler(postUrl string, workNum int) (err error) {
@@ -94,7 +93,7 @@ func crawler(postUrl string, workNum int) (err error) {
 	var g errgroup.Group
 	for i := 0; i < workNum; i++ {
 		g.Go(func() error {
-			err := worker(dir, targetSiteConf.Website, &g, linkChan)
+			err := worker(dir, targetSiteConf.Website, linkChan)
 			return err
 		})
 	}

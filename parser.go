@@ -17,25 +17,31 @@ var DefaultJson = []byte(`
 			"website": "cnblogs.com",
 			"title_pattern": "title",
 			"img_pattern" : ".navbar-branding img",
-			"img_attr_pattern": "src"
+			"img_addr_pattern": "src"
 		},
 		{
 			"website": "qq.com",
 			"title_pattern": "title",
 			"img_pattern" : ".pic img",
-			"img_attr_pattern": "src"
+			"img_addr_pattern": "src"
 		},
 		{
 			"website": "haicoder.net",
 			"title_pattern": "title",
 			"img_pattern" : ".logo img",
-			"img_attr_pattern": "src"
+			"img_addr_pattern": "src"
 		},
 		{
 			"website": "juejin.cn/post/6979532761954533390/",
 			"title_pattern": "title",
 			"img_pattern" : ".mobile img",
-			"img_attr_pattern": "src"
-		}	
+			"img_addr_pattern": "src"
+		},
+		{
+			"website": "www.yili.com",
+			"title_pattern": "title",
+			"img_pattern" : ".index-focus-item img",
+			"img_addr_pattern": "src"
+		}
 	]
 }`)
