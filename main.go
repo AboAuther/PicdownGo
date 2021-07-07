@@ -30,7 +30,10 @@ func worker(destDir, website string, linkChan chan string) (err error) {
 		}
 		resp, err := http.Get(picUrl)
 		if err != nil {
-			return fmt.Errorf("picUrl:%sGet picture URL failed,%w", picUrl, err)
+			return fmt.Errorf("picUrl:%s Get picture URL failed,%w", picUrl, err)
+		}
+		if resp.StatusCode != 200 {
+			return fmt.Errorf("Status code error:%d %s \n", resp.StatusCode, resp.Status)
 		}
 		defer resp.Body.Close()
 		out, err := os.Create(destDir + "/" + fmt.Sprint(rand.Int()) + ".png")
@@ -70,8 +73,7 @@ func crawler(postUrl string, workNum int) (err error) {
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		fmt.Printf("Status code error:%d %s \n", res.StatusCode, res.Status)
-		return nil
+		return fmt.Errorf("Status code error:%d %s \n", res.StatusCode, res.Status)
 	}
 
 	doc, err := goquery.NewDocumentFromReader(res.Body)
@@ -136,16 +138,6 @@ func reloadParser(jsonFileAddr string) (err error) {
 	return nil
 }
 func main() {
-	baseDir = "Pic"
-	err := os.MkdirAll(baseDir, 0755)
-	if err != nil {
-		_ = fmt.Errorf("create dictionary failed,%w", err)
-	}
-	jsonFileAddr := fmt.Sprintf("./parser.json")
-	err = reloadParser(jsonFileAddr)
-	if err != nil {
-		_ = fmt.Errorf("Loading jsonfile failed,%w", err)
-	}
 	var workNum int
 	var postUrl string
 	var command = &cobra.Command{
@@ -155,18 +147,29 @@ func main() {
 		//Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			if postUrl == "" {
-				fmt.Println("Please use 'PicdownGo -u URL'.")
+				return fmt.Errorf("Please use 'PicdownGo -u URL'.")
+			} else {
+				baseDir = "Pic"
+				err = os.MkdirAll(baseDir, 0755)
+				if err != nil {
+					_ = fmt.Errorf("create dictionary failed,%w", err)
+				}
+				jsonFileAddr := fmt.Sprintf("./parser.json")
+				err = reloadParser(jsonFileAddr)
+				if err != nil {
+					_ = fmt.Errorf("Loading jsonfile failed,%w", err)
+				}
+				err = crawler(postUrl, workNum)
+				if err != nil {
+					return fmt.Errorf("%w", err)
+				}
+				fmt.Println("pictures have downloaded")
+				return nil
 			}
-			err = crawler(postUrl, workNum)
-			if err != nil {
-				return fmt.Errorf("%w", err)
-			}
-			fmt.Println("pictures have downloaded")
-			return nil
 		}}
 	command.Flags().StringVarP(&postUrl, "URL", "u", "", "URL of post")
 	command.Flags().IntVarP(&workNum, "workerNum", "w", 20, "numben of workers")
-	err = command.Execute()
+	err := command.Execute()
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, err.Error())
 		os.Exit(1)

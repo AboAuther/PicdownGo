@@ -1,4 +1,4 @@
-module PicdownGo
+module github.com/AboAuther/PicdownGo
 
 go 1.16
 
