@@ -32,7 +32,7 @@ var DefaultJson = []byte(`
 			"img_addr_pattern": "src"
 		},
 		{
-			"website": "juejin.cn/post/6979532761954533390/",
+			"website": "juejin.cn",
 			"title_pattern": "title",
 			"img_pattern" : ".mobile img",
 			"img_addr_pattern": "src"
