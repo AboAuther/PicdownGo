@@ -5,10 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/fesiong/goproject/convert"
 	"github.com/spf13/cobra"
 	"io"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -23,15 +21,40 @@ var (
 )
 var configuration Parser
 
-func function(destDir, picUrl string) (err error) {
-	if strings.HasPrefix(picUrl, "//") {
-		picUrl = "https:" + picUrl
-	} else {
-		//picUrl = "https://" + website + picUrl
-	}
-	resp, err := http.Get(picUrl)
+func parseUrl(picUrl string, targetWeb *Website) (string, error) {
+	u, err := url.Parse(picUrl)
 	if err != nil {
-		return fmt.Errorf("picUrl:%s Get picture URL failed,%w", picUrl, err)
+		return "", fmt.Errorf("picture's Url is not correct,%w", err)
+	}
+	if u.Scheme == "" {
+		if targetWeb.TCPProtocol == "https" {
+			if strings.HasPrefix(picUrl, "//") {
+				picUrl = "https:" + picUrl
+			} else if strings.HasPrefix(picUrl, "https://") {
+				return picUrl, nil
+			} else if !strings.HasPrefix(picUrl, "//") && !strings.HasPrefix(picUrl, "https://") {
+				picUrl = "https://" + targetWeb.Website + picUrl
+			}
+		} else {
+			if strings.HasPrefix(picUrl, "//") {
+				picUrl = "http:" + picUrl
+			} else if strings.HasPrefix(picUrl, "http://") {
+				return picUrl, nil
+			} else if !strings.HasPrefix(picUrl, "//") && !strings.HasPrefix(picUrl, "http://") {
+				picUrl = "http://" + targetWeb.Website + picUrl
+			}
+		}
+	}
+	return picUrl, nil
+}
+func downloading(destDir, picUrl string, targetWeb *Website) (err error) {
+	picurl, err := parseUrl(picUrl, targetWeb)
+	if err != nil {
+		return fmt.Errorf("parse picture's url failed,%w", err)
+	}
+	resp, err := http.Get(picurl)
+	if err != nil {
+		return fmt.Errorf("picUrl:%s Get picture URL failed,%w", picurl, err)
 	}
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("Status code error:%d %s \n", resp.StatusCode, resp.Status)
@@ -41,19 +64,24 @@ func function(destDir, picUrl string) (err error) {
 	if err != nil {
 		return fmt.Errorf("create file failed,%w", err)
 	}
-	defer out.Close()
+	defer func(out *os.File) {
+		err := out.Close()
+		if err != nil {
+			return
+		}
+	}(out)
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
 		return fmt.Errorf("down picture failed,%w", err)
 	}
 	return nil
 }
-func worker(destDir, website string, linkChan chan string, wg *sync.WaitGroup) {
+func worker(destDir string, targetWeb *Website, linkChan chan string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for picUrl := range linkChan {
-		err := function(destDir, picUrl)
+		err := downloading(destDir, picUrl, targetWeb)
 		if err != nil {
-			log.Printf("%w", err)
+			log.Printf("%s", err)
 		}
 	}
 }
@@ -70,7 +98,7 @@ func findDomainByUrl(postUrl string) (*Website, error) {
 			return &configuration.SupportWebsites[index], nil
 		}
 	}
-	err = errors.New("Url input is not in support list")
+	err = errors.New("url input is not in support list")
 	return nil, err
 }
 
@@ -83,9 +111,7 @@ func crawler(postUrl string, workNum int) (err error) {
 	if res.StatusCode != 200 {
 		return fmt.Errorf("Status code error:%d %s \n", res.StatusCode, res.Status)
 	}
-	body, err := ioutil.ReadAll(res.Body)
-	b := convert.ToUtf8(string(body))
-	fmt.Println(b)
+
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
 		return fmt.Errorf("create new documents failed,%w", err)
@@ -101,11 +127,13 @@ func crawler(postUrl string, workNum int) (err error) {
 	fmt.Println("[", targetSiteConf.Website, "]:", title, "start downloading...")
 	dir := fmt.Sprintf("%v/%v - %v", baseDir, targetSiteConf.Website, title)
 	_ = os.MkdirAll(dir, 0755)
+
 	linkChan := make(chan string)
 	wg := new(sync.WaitGroup)
+
 	for i := 0; i < workNum; i++ {
 		wg.Add(1)
-		go worker(dir, targetSiteConf.Website, linkChan, wg)
+		go worker(dir, targetSiteConf, linkChan, wg)
 	}
 	doc.Find(targetSiteConf.ImgPattern).Each(func(i int, img *goquery.Selection) {
 		imgUrl, _ := img.Attr(targetSiteConf.ImgAddrPattern)
@@ -128,7 +156,7 @@ func reloadParser(jsonFileAddr string) (err error) {
 		file, _ = os.ReadFile(jsonFileAddr)
 		fmt.Println("Loading local json file...")
 	} else {
-		err := errors.New("Json file is not Existed")
+		err := errors.New("json file is not Existed")
 		return err
 	}
 	if len(file) == 0 {
@@ -142,16 +170,16 @@ func reloadParser(jsonFileAddr string) (err error) {
 	return nil
 }
 func main() {
+	//log.SetFlags(log.Lshortfile)
 	var workNum int
 	var postUrl string
 	var command = &cobra.Command{
 		Use:   "PicdownGo -u URL",
 		Short: "Download pictures",
 		Long:  `Download given url pictures by cmdline`,
-		//Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			if postUrl == "" {
-				return fmt.Errorf("Please use 'PicdownGo -u URL'.")
+				return fmt.Errorf("please use 'PicdownGo -u URL'")
 			} else {
 				baseDir = "Pic"
 				err = os.MkdirAll(baseDir, 0755)
@@ -161,7 +189,7 @@ func main() {
 				jsonFileAddr := fmt.Sprintf("./parser.json")
 				err = reloadParser(jsonFileAddr)
 				if err != nil {
-					return fmt.Errorf("Loading jsonfile failed,%w", err)
+					return fmt.Errorf("loading jsonfile failed,%w", err)
 				}
 				err = crawler(postUrl, workNum)
 				if err != nil {
@@ -172,10 +200,10 @@ func main() {
 			}
 		}}
 	command.Flags().StringVarP(&postUrl, "URL", "u", "", "URL of post")
-	command.Flags().IntVarP(&workNum, "workerNum", "w", 20, "numben of workers")
+	command.Flags().IntVarP(&workNum, "workerNum", "w", 20, "number of workers")
 	err := command.Execute()
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, err.Error())
+		_, _ = fmt.Fprintf(os.Stderr, "Fprintf:%v\n", err.Error())
 		os.Exit(1)
 	}
 
