@@ -19,7 +19,6 @@ import (
 var (
 	baseDir string
 )
-var configuration Parser
 
 func parseUrl(picUrl string, targetWeb *Website) (string, error) {
 	u, err := url.Parse(picUrl)
@@ -85,7 +84,7 @@ func worker(destDir string, targetWeb *Website, linkChan chan string, wg *sync.W
 		}
 	}
 }
-func findDomainByUrl(postUrl string) (*Website, error) {
+func findDomainByUrl(postUrl string, configuration *Parser) (*Website, error) {
 	var targetDomain string
 	u, err := url.Parse(postUrl)
 	if err != nil {
@@ -102,7 +101,7 @@ func findDomainByUrl(postUrl string) (*Website, error) {
 	return nil, err
 }
 
-func crawler(postUrl string, workNum int) (err error) {
+func crawler(postUrl string, workNum int, jsonfile *Parser) (err error) {
 	res, err := http.Get(postUrl)
 	if err != nil {
 		return fmt.Errorf("url input is unvalued,%w", err)
@@ -116,7 +115,7 @@ func crawler(postUrl string, workNum int) (err error) {
 	if err != nil {
 		return fmt.Errorf("create new documents failed,%w", err)
 	}
-	targetSiteConf, err := findDomainByUrl(postUrl)
+	targetSiteConf, err := findDomainByUrl(postUrl, jsonfile)
 	if err != nil {
 		return fmt.Errorf("find domian failed,%w", err)
 	}
@@ -150,24 +149,25 @@ func checkFileIsExits(jsonFileAddr string) bool {
 	}
 	return false
 }
-func reloadParser(jsonFileAddr string) (err error) {
+func reloadParser(jsonFileAddr string) (*Parser, error) {
 	var file []byte
+	var configuration Parser
 	if checkFileIsExits(jsonFileAddr) {
 		file, _ = os.ReadFile(jsonFileAddr)
 		fmt.Println("Loading local json file...")
 	} else {
 		err := errors.New("json file is not Existed")
-		return err
+		return nil, err
 	}
 	if len(file) == 0 {
 		fmt.Println("Json file is empty,Loading default parser...")
 		file = DefaultJson
 	}
-	err = json.Unmarshal(file, &configuration)
+	err := json.Unmarshal(file, &configuration)
 	if err != nil {
-		return fmt.Errorf("json file unmarshal failed,%w", err)
+		return nil, fmt.Errorf("json file unmarshal failed,%w", err)
 	}
-	return nil
+	return &configuration, nil
 }
 func main() {
 	//log.SetFlags(log.Lshortfile)
@@ -187,11 +187,12 @@ func main() {
 					return fmt.Errorf("create dictionary failed,%w", err)
 				}
 				jsonFileAddr := fmt.Sprintf("./parser.json")
-				err = reloadParser(jsonFileAddr)
+				jsonfile, err := reloadParser(jsonFileAddr)
 				if err != nil {
 					return fmt.Errorf("loading jsonfile failed,%w", err)
 				}
-				err = crawler(postUrl, workNum)
+				fmt.Println(jsonfile)
+				err = crawler(postUrl, workNum, jsonfile)
 				if err != nil {
 					return fmt.Errorf("%w", err)
 				}
