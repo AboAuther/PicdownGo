@@ -2,10 +2,6 @@
 
 #### 项目利用命令行实现了特定网站下载静态图片
 
-### 安装方法
-```bash
-go get -u -x github.com/AboAuther/PicdownGo
-```
 
 ### 使用方法
 不指定并行下载数量时，默认为20
@@ -16,7 +12,8 @@ PicdownGo -u URL
 PicdownGo -u URL -w worknum
 ```
 
-##加载Json配置
+## 项目原理
+### 加载Json配置
 json是一个文本文件，将对应的数据读取到后，赋值给全局变量。
 ```go
     if checkFileIsExits(jsonFileAddr) {
@@ -32,7 +29,7 @@ json是一个文本文件，将对应的数据读取到后，赋值给全局变�
     }
     err = json.Unmarshal(file, &configuration)
 ```
-## 解析域名
+### 解析域名
 通过输入的URL与json文件中支持的网站列表对比，获取域名准备下载。
 ```go
     u, err := url.Parse(postUrl)
@@ -47,7 +44,7 @@ json是一个文本文件，将对应的数据读取到后，赋值给全局变�
         }
     }
 ```
-## 并行下载
+### 并行下载
 通过 goroutine以及waitgroup和channel 并行下载同一网址的不同地址的图片
 ```go
     defer wg.Done()
