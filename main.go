@@ -14,44 +14,32 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 var (
 	baseDir string
 )
 
-func parseUrl(picUrl string, targetWeb *Website) (string, error) {
+func urlFormat(picUrl, protocol, website string) (string, error) {
 	u, err := url.Parse(picUrl)
 	if err != nil {
 		return "", fmt.Errorf("picture's Url is not correct,%w", err)
 	}
 	if u.Scheme == "" {
-		if targetWeb.TCPProtocol == "https" {
-			if strings.HasPrefix(picUrl, "//") {
-				picUrl = "https:" + picUrl
-			} else if strings.HasPrefix(picUrl, "https://") {
-				return picUrl, nil
-			} else if !strings.HasPrefix(picUrl, "//") && !strings.HasPrefix(picUrl, "https://") {
-				picUrl = "https://" + targetWeb.Website + picUrl
-			}
-		} else {
-			if strings.HasPrefix(picUrl, "//") {
-				picUrl = "http:" + picUrl
-			} else if strings.HasPrefix(picUrl, "http://") {
-				return picUrl, nil
-			} else if !strings.HasPrefix(picUrl, "//") && !strings.HasPrefix(picUrl, "http://") {
-				picUrl = "http://" + targetWeb.Website + picUrl
-			}
-		}
+		picUrl = protocol + ":" + picUrl
+	} else if u.Scheme == protocol {
+		return picUrl, nil
 	}
 	return picUrl, nil
 }
 func downloading(destDir, picUrl string, targetWeb *Website) (err error) {
-	picurl, err := parseUrl(picUrl, targetWeb)
+	picurl, err := urlFormat(picUrl, targetWeb.TCPProtocol, targetWeb.Website)
 	if err != nil {
 		return fmt.Errorf("parse picture's url failed,%w", err)
 	}
-	resp, err := http.Get(picurl)
+	client := http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Get(picurl)
 	if err != nil {
 		return fmt.Errorf("picUrl:%s Get picture URL failed,%w", picurl, err)
 	}
@@ -63,12 +51,12 @@ func downloading(destDir, picUrl string, targetWeb *Website) (err error) {
 	if err != nil {
 		return fmt.Errorf("create file failed,%w", err)
 	}
-	defer func(out *os.File) {
+	defer func() {
 		err := out.Close()
 		if err != nil {
 			return
 		}
-	}(out)
+	}()
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
 		return fmt.Errorf("down picture failed,%w", err)
@@ -170,7 +158,7 @@ func reloadParser(jsonFileAddr string) (*Parser, error) {
 	return &configuration, nil
 }
 func main() {
-	//log.SetFlags(log.Lshortfile)
+	log.SetFlags(log.Lshortfile)
 	var workNum int
 	var postUrl string
 	var command = &cobra.Command{
@@ -191,7 +179,6 @@ func main() {
 				if err != nil {
 					return fmt.Errorf("loading jsonfile failed,%w", err)
 				}
-				fmt.Println(jsonfile)
 				err = crawler(postUrl, workNum, jsonfile)
 				if err != nil {
 					return fmt.Errorf("%w", err)

@@ -15,13 +15,6 @@ var DefaultJson = []byte(`
 {
 	"support_websites":[
 		{
-			"website": "cnblogs.com",
-			"title_pattern": "title",
-			"img_pattern" : ".navbar-branding img",
-			"img_addr_pattern": "src",
-			"tcp_protocol":"https"
-		},
-		{
 			"website": "qq.com",
 			"title_pattern": "title",
 			"img_pattern" : ".pic img",
@@ -29,23 +22,23 @@ var DefaultJson = []byte(`
 			"tcp_protocol":"https"
 		},
 		{
-			"website": "haicoder.net",
+			"website": "www.yili.com/",
 			"title_pattern": "title",
-			"img_pattern" : ".logo img",
+			"img_pattern" : ".js-index-focus img",
 			"img_addr_pattern": "src",
 			"tcp_protocol":"https"
 		},
 		{
-			"website": "juejin.cn",
+			"website": "bookstack.cn",
 			"title_pattern": "title",
-			"img_pattern" : ".mobile img",
+			"img_pattern" : ".pull-left img",
 			"img_addr_pattern": "src",
 			"tcp_protocol":"https"
 		},
 		{
-			"website": "www.yili.com",
+			"website": "sina.com.cn",
 			"title_pattern": "title",
-			"img_pattern" : ".index-focus-item img",
+			"img_pattern" : ".uni-blk-pic img",
 			"img_addr_pattern": "src",
 			"tcp_protocol":"https"
 		}

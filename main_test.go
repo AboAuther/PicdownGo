@@ -11,11 +11,11 @@ func TestParseUrl(t *testing.T) {
 	t.Run("TCP:https and '//'", func(t *testing.T) {
 		picurl := "//inews.gtimg.com/newsapp_ls/0/13753802147_640330/0"
 		website := Website{
-			"qq.com",
-			"title",
-			".pic img",
-			"src",
-			"https",
+			Website:        "qq.com",
+			TitlePattern:   "title",
+			ImgPattern:     ".pic img",
+			ImgAddrPattern: "src",
+			TCPProtocol:    "https",
 		}
 		got, err := parseUrl(picurl, &website)
 		if err != nil {
