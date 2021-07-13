@@ -8,8 +8,12 @@ go get -u -x github.com/AboAuther/PicdownGo
 ```
 
 ### 使用方法
+不指定并行下载数量时，默认为20
+
+或者通过 -w + worknum 指令指定对应的工作数量
 ```bash
 PicdownGo -u URL
+PicdownGo -u URL -w worknum
 ```
 
 ##加载Json配置
