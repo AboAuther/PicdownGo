@@ -30,6 +30,8 @@ func urlFormat(picUrl, protocol, website string) (string, error) {
 		picUrl = protocol + ":" + picUrl
 	} else if u.Scheme == protocol {
 		return picUrl, nil
+	} else if u.Host == "" && u.Scheme == "" {
+		picUrl = protocol + ":" + website + picUrl
 	}
 	return picUrl, nil
 }
