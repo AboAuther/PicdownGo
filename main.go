@@ -17,9 +17,7 @@ import (
 	"time"
 )
 
-var (
-	baseDir string
-)
+var baseDir string
 
 func urlFormat(picUrl, protocol, website string) (string, error) {
 	u, err := url.Parse(picUrl)
@@ -45,7 +43,7 @@ func downloading(destDir, picUrl string, targetWeb *Website) (err error) {
 	if err != nil {
 		return fmt.Errorf("picUrl:%s Get picture URL failed,%w", picurl, err)
 	}
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("Status code error:%d %s \n", resp.StatusCode, resp.Status)
 	}
 	defer resp.Body.Close()
@@ -92,15 +90,15 @@ func findDomainByUrl(postUrl string, configuration *Parser) (*Website, error) {
 }
 
 func crawler(postUrl string, workNum int, jsonfile *Parser) (err error) {
-	res, err := http.Get(postUrl)
+	client := http.Client{Timeout: 5 * time.Second}
+	res, err := client.Get(postUrl)
 	if err != nil {
 		return fmt.Errorf("url input is unvalued,%w", err)
 	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("Status code error:%d %s \n", res.StatusCode, res.Status)
 	}
-
+	defer res.Body.Close()
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
 		return fmt.Errorf("create new documents failed,%w", err)
