@@ -10,7 +10,7 @@ import (
 
 var baseDir string
 
-const timeOut = 5 * time.Second
+const timeout = 5 * time.Second
 
 func main() {
 	log.SetFlags(log.Lshortfile)
@@ -38,7 +38,7 @@ func main() {
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}
-			fmt.Println("pictures have downloaded")
+			log.Println("pictures have downloaded")
 			return nil
 		}}
 	command.Flags().StringVarP(&postUrl, "URL", "u", "", "URL of post")

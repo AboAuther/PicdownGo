@@ -21,7 +21,7 @@ PicdownGo -u URL -w worknum
 
 ## 支持网站
 - [QQ网](https://qq.com/)
-- [新浪网](https://www.sina,com.cn)
+- [新浪网](https://www.sina.com.cn)
 - [书栈网](https://www.bookstack.com.cn)
 - [伊利网](https://www.yili.com)
 

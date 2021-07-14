@@ -10,16 +10,15 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"time"
 )
 
 func worker(destDir string, targetWeb *Website, linkChan chan string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	client := http.Client{Timeout: timeOut}
+	client := http.Client{Timeout: timeout}
 	for picUrl := range linkChan {
 		err := downloading(destDir, picUrl, targetWeb, client)
 		if err != nil {
-			log.Printf("%s", err)
+			log.Printf("download pictures failed,err:%s", err)
 		}
 	}
 }
@@ -33,7 +32,7 @@ func findDomainByUrl(postUrl string, configuration *Parser) (*Website, error) {
 	targetDomain = u.Host
 	for index, website := range configuration.SupportWebsites {
 		if strings.Contains(targetDomain, website.Website) {
-			fmt.Println("use ", configuration.SupportWebsites[index].Website, "parser")
+			log.Println("use ", configuration.SupportWebsites[index].Website, "parser")
 			return &configuration.SupportWebsites[index], nil
 		}
 	}
@@ -42,7 +41,7 @@ func findDomainByUrl(postUrl string, configuration *Parser) (*Website, error) {
 }
 
 func crawler(postUrl string, workNum int, jsonfile *Parser) (err error) {
-	client := http.Client{Timeout: 5 * time.Second}
+	client := http.Client{Timeout: timeout}
 	res, err := client.Get(postUrl)
 	if err != nil {
 		return fmt.Errorf("url input is unvalued,%w", err)
@@ -59,11 +58,8 @@ func crawler(postUrl string, workNum int, jsonfile *Parser) (err error) {
 	if err != nil {
 		return fmt.Errorf("find domian failed,%w", err)
 	}
-	if targetSiteConf == nil {
-		return nil
-	}
 	title := doc.Find(targetSiteConf.TitlePattern).Text()
-	fmt.Println("[", targetSiteConf.Website, "]:", title, "start downloading...")
+	log.Println("[", targetSiteConf.Website, "]:", title, "start downloading...")
 	dir := fmt.Sprintf("%v/%v - %v", baseDir, targetSiteConf.Website, title)
 	_ = os.MkdirAll(dir, 0755)
 

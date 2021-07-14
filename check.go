@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -19,13 +19,13 @@ func reloadParser(jsonFileAddr string) (*Parser, error) {
 	var configuration Parser
 	if checkFileIsExits(jsonFileAddr) {
 		file, _ = os.ReadFile(jsonFileAddr)
-		fmt.Println("Loading local json file...")
+		log.Println("Loading local json file...")
 	} else {
-		err := errors.New("json file is not Existed")
-		return nil, err
+		log.Println("json file is not Existed,Loading default parser...")
+		file = DefaultJson
 	}
 	if len(file) == 0 {
-		fmt.Println("Json file is empty,Loading default parser...")
+		log.Println("Json file is empty,Loading default parser...")
 		file = DefaultJson
 	}
 	err := json.Unmarshal(file, &configuration)
