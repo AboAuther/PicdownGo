@@ -8,34 +8,39 @@ type Website struct {
 	TitlePattern   string `json:"title_pattern"`
 	ImgPattern     string `json:"img_pattern"`
 	ImgAddrPattern string `json:"img_addr_pattern"`
+	TCPProtocol    string `json:"tcp_protocol"`
 }
 
 var DefaultJson = []byte(`
 {
 	"support_websites":[
 		{
-			"website": "cnblogs.com",
-			"title_pattern": "title",
-			"img_pattern" : ".navbar-branding img",
-			"img_attr_pattern": "src"
-		},
-		{
 			"website": "qq.com",
 			"title_pattern": "title",
 			"img_pattern" : ".pic img",
-			"img_attr_pattern": "src"
+			"img_addr_pattern": "src",
+			"tcp_protocol":"https"
 		},
 		{
-			"website": "haicoder.net",
+			"website": "www.yili.com/",
 			"title_pattern": "title",
-			"img_pattern" : ".logo img",
-			"img_attr_pattern": "src"
+			"img_pattern" : ".js-index-focus img",
+			"img_addr_pattern": "src",
+			"tcp_protocol":"https"
 		},
 		{
-			"website": "juejin.cn/post/6979532761954533390/",
+			"website": "bookstack.cn",
 			"title_pattern": "title",
-			"img_pattern" : ".mobile img",
-			"img_attr_pattern": "src"
-		}	
+			"img_pattern" : ".pull-left img",
+			"img_addr_pattern": "src",
+			"tcp_protocol":"https"
+		},
+		{
+			"website": "sina.com.cn",
+			"title_pattern": "title",
+			"img_pattern" : ".uni-blk-pic img",
+			"img_addr_pattern": "src",
+			"tcp_protocol":"https"
+		}
 	]
 }`)

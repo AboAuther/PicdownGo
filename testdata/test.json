@@ -1,0 +1,46 @@
+{
+  "support_websites":[
+    {
+      "website": "cnblogs.com",
+      "title_pattern": "title",
+      "img_pattern" : ".navbar-branding img",
+      "img_addr_pattern": "src",
+      "tcp_protocol":"https"
+    },
+    {
+      "website": "qq.com",
+      "title_pattern": "title",
+      "img_pattern" : ".pic img",
+      "img_addr_pattern": "src",
+      "tcp_protocol":"https"
+    },
+    {
+      "website": "haicoder.net",
+      "title_pattern": "title",
+      "img_pattern" : ".logo img",
+      "img_addr_pattern": "src",
+      "tcp_protocol":"https"
+    },
+    {
+      "website": "juejin.cn",
+      "title_pattern": "title",
+      "img_pattern" : ".mobile img",
+      "img_addr_pattern": "src",
+      "tcp_protocol":"https"
+    },
+    {
+      "website": "www.yili.com",
+      "title_pattern": "title",
+      "img_pattern" : ".js-index-focus img",
+      "img_addr_pattern": "src",
+      "tcp_protocol":"https"
+    },
+    {
+      "website": "bookstack.cn",
+      "title_pattern": "title",
+      "img_pattern" : ".pull-left img",
+      "img_addr_pattern": "src",
+      "tcp_protocol":"https"
+    }
+  ]
+}
